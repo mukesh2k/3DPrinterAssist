@@ -53,7 +53,7 @@ public class DrawView extends View {
         mPaint.setAlpha(0xff);
 
     }
-    int h=0,w=0;
+    int h=1,w=1;
     // this method instantiate the bitmap and object
     public void init(int height, int width) {
         h=height;
