@@ -115,7 +115,7 @@ public class DrawView extends View {
         canvas.save();
 
         // DEFAULT color of the canvas
-        int backgroundColor = Color.WHITE;
+        int backgroundColor = Color.BLACK;
         mCanvas.drawColor(backgroundColor);
 
         // now, we iterate over the list of paths

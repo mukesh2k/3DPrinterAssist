@@ -1,4 +1,5 @@
 package com.example.myapplication;
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -9,6 +10,7 @@ import android.provider.MediaStore;
 import android.text.Editable;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -22,7 +24,7 @@ import com.google.android.material.slider.RangeSlider;
 import java.io.OutputStream;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     // creating the object of type DrawView
     // in order to get the reference of the View
@@ -39,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         // getting the reference of the views from their ids
         paint = (DrawView) findViewById(R.id.draw_view);
         rangeSlider = (RangeSlider) findViewById(R.id.rangebar);
