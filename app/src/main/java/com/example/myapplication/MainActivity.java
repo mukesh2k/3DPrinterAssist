@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.Editable;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.Window;
@@ -19,6 +20,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.chilkatsoft.CkScp;
+import com.chilkatsoft.CkSsh;
 import com.google.android.material.slider.RangeSlider;
 
 import java.io.OutputStream;
@@ -36,7 +39,7 @@ public class MainActivity extends Activity {
     // creating a RangeSlider object, which will
     // help in selecting the width of the Stroke
     private RangeSlider rangeSlider;
-
+    private static final String TAG = "Chilkat";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,7 +101,7 @@ public class MainActivity extends Activity {
 
                     ContentValues cv = new ContentValues();
                     // name of the file
-                        String name=("_"+ww+"_"+hh+".png");
+                        String name=System.currentTimeMillis() / 1000 +"_"+ww+"_"+hh+".png";
                     cv.put(MediaStore.Images.Media.DISPLAY_NAME, name);
 
                     // type of the file
@@ -109,6 +112,7 @@ public class MainActivity extends Activity {
 
                     // get the Uri of the file which is to be created in the storage
                     Uri uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cv);
+
                     try {
                         // open the output stream with the above uri
                         imageOutStream[0] = getContentResolver().openOutputStream(uri);
@@ -118,11 +122,26 @@ public class MainActivity extends Activity {
 
                         // close the output stream after use
                         imageOutStream[0].close();
-                        Intent intent=new Intent(Intent.ACTION_SEND);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        intent.putExtra(Intent.EXTRA_STREAM,uri);
-                        intent.setType("image/png");
-                        startActivity(Intent.createChooser(intent,"IMAGE"));
+
+                        CkScp scp = new CkScp();
+                        boolean success = scp.UseSsh(Paint.ssh);
+                        if (success != true) {
+                            Toast.makeText(getApplicationContext(),"SCP failed",Toast.LENGTH_LONG).show();
+                            Log.i(TAG, scp.lastErrorText());
+                            return;
+                        }
+
+                        String remotePath = "~/Desktop/3Dprinter/"+name;
+                        String localPath = "/storage/emulated/0/"+Environment.DIRECTORY_PICTURES+"/"+name;
+                        success = scp.UploadFile(localPath,remotePath);
+                        if (success != true) {
+                            Log.i(TAG, scp.lastErrorText());
+                            return;
+                        }
+
+                        Log.i(TAG, "SCP upload file success.");
+                        Toast.makeText(getApplicationContext(),"File loaded to the printer successfully",Toast.LENGTH_LONG).show();
+                        // Disconnect
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -179,5 +198,12 @@ public class MainActivity extends Activity {
                 paint.init(height, width);
             }
         });
+    }
+    static {
+        System.loadLibrary("chilkat");
+
+        // Note: If the incorrect library name is passed to System.loadLibrary,
+        // then you will see the following error message at application startup:
+        //"The application <your-application-name> has stopped unexpectedly. Please try again."
     }
 }

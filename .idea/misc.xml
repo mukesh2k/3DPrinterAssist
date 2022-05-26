@@ -5,6 +5,7 @@
       <map>
         <entry key="app/src/main/res/layout-land/activity_main.xml" value="0.12" />
         <entry key="app/src/main/res/layout-land/braille.xml" value="0.1" />
+        <entry key="app/src/main/res/layout-land/configuration.xml" value="0.22" />
         <entry key="app/src/main/res/layout-land/help.xml" value="0.12432432432432433" />
         <entry key="app/src/main/res/layout-land/paint.xml" value="0.33" />
         <entry key="app/src/main/res/layout-land/utility_size.xml" value="0.1" />
