@@ -22,6 +22,7 @@
         android:text="Not connected"
         android:id="@+id/con"
         android:textColor="#FF0000"></TextView>
+
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -37,7 +38,6 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-
         >
         <Button
             android:layout_width="wrap_content"
@@ -53,6 +53,13 @@
             android:id="@+id/Paint"
             android:layout_margin="10dp"
             android:text="Paint"></Button>
+
+        <Button
+            android:id="@+id/ipsave"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Connect"
+            android:layout_margin="10dp"></Button>
         <Button
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
@@ -61,33 +68,16 @@
             android:text="Help">
 
         </Button>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="ip address"
-            android:paddingRight="52dp"></TextView>
-        <EditText
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:hint="192.168.100.100"
-            android:id="@+id/editip"
-            android:paddingHorizontal="30dp"></EditText>
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Connect"
-            android:id="@+id/ipsave"
-            android:layout_marginLeft="50dp">
 
-        </Button>
     </LinearLayout>
 
+<ProgressBar
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:visibility="invisible"
+    android:id="@+id/prog"
+    ></ProgressBar>
 
     <TextView
         android:layout_width="match_parent"

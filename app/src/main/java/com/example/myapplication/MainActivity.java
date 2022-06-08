@@ -81,12 +81,12 @@ public class MainActivity extends Activity {
                     public void onClick(View v) {
                         String ww=width.getEditableText().toString(),hh=thick.getEditableText().toString();
                         float w=Float.parseFloat(ww),h=Float.parseFloat(hh);
-                        if (w>150)
+                        if (w>150 || w<1)
                         {
                             Toast.makeText(getApplicationContext(),"width is too high",Toast.LENGTH_LONG).show();
                             return;
                         }
-                        if (h>10)
+                        if (h>10 || h<1)
                         {
                             Toast.makeText(getApplicationContext(),"Thickness is too high",Toast.LENGTH_LONG).show();
                             return;
