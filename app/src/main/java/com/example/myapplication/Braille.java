@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.text.Html;
@@ -14,10 +15,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
 import androidx.annotation.Nullable;
 
-import com.chilkatsoft.CkScp;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,13 +33,14 @@ import java.io.OutputStreamWriter;
 
 public class Braille extends Activity {
     String input="",name;
+    Handler h;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.braille);
         EditText text=(EditText) findViewById(R.id.lines);
         Button send=(Button) findViewById(R.id.button10);
-
+        h=new Handler();
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -60,46 +65,51 @@ public class Braille extends Activity {
                 Uri uri=data.getData();
                 try
                 {
-                        OutputStream os=getContentResolver().openOutputStream(uri);
-                        os.write(input.getBytes());
-                        os.close();
-                        System.out.println(uri.getPath());
-                        CkScp scp = new CkScp();
-                        boolean success = scp.UseSsh(Paint.ssh);
-                        if (success != true) {
-                            Toast.makeText(getApplicationContext(),"SCP failed",Toast.LENGTH_LONG).show();
-                            Log.i(Paint.TAG, scp.lastErrorText());
-                            return;
-                        }
-
-                        String remotePath = "~/Desktop/3Dprinter/"+name;
-                        String localPath = "/storage/emulated/0/Download/"+name;
-                        success = scp.UploadFile(localPath,remotePath);
-                        if (success != true) {
-                            Log.i(Paint.TAG, scp.lastErrorText());
-                            Toast.makeText(getApplicationContext(),"Give file and storage permission to this app",Toast.LENGTH_LONG).show();
-                            return;
-                        }
-
-                        Log.i(Paint.TAG, "SCP upload file success.");
-                        Toast.makeText(getApplicationContext(),"File loaded to the printer successfully",Toast.LENGTH_LONG).show();
-
-                }
-                catch (FileNotFoundException e) {
+                    OutputStream os=getContentResolver().openOutputStream(uri);
+                    os.write(input.getBytes());
+                    os.close();
+                    System.out.println(uri.getPath());
+                    String remotePath = "/home/pi/Desktop/3Dprinter/"+name;
+                    String localPath = "/storage/emulated/0/Download/"+name;
+                    runThread rune=new runThread(localPath,remotePath,h);
+                    new Thread(rune).start();
+                } catch (IOException e) {
                         e.printStackTrace();
-                    } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                    }
 
 
             }
         }
     }
-    static {
-        System.loadLibrary("chilkat");
+    public class runThread extends Thread
+    {
+        String localPath,remotePath;
+        Handler hand;
+        boolean success= false;
+        public runThread(String l, String r, Handler h)
+        {
+            localPath=l;
+            remotePath=r;
+            hand=h;
+        }
 
-        // Note: If the incorrect library name is passed to System.loadLibrary,
-        // then you will see the following error message at application startup:
-        //"The application <your-application-name> has stopped unexpectedly. Please try again."
+
+        public void run()
+        {
+            super.run();
+            try {
+                Paint.channelSftp.put(localPath, remotePath);
+                success=true;
+            } catch (SftpException e) {
+                e.printStackTrace();
+            }
+            hand.post(()->{
+                if (success)
+                    Toast.makeText(getApplicationContext(),"File loaded to the printer successfully",Toast.LENGTH_LONG).show();
+                else
+                    Toast.makeText(getApplicationContext(),"SFTP problem",Toast.LENGTH_LONG).show();
+            });
+
+        }
     }
 }

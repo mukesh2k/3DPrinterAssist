@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.util.Log;
@@ -18,11 +19,12 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
-import com.chilkatsoft.CkScp;
-import com.chilkatsoft.CkSsh;
 import com.google.android.material.slider.RangeSlider;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
 
 import java.io.OutputStream;
 
@@ -76,6 +78,7 @@ public class MainActivity extends Activity {
                 Button saver= (Button)mView.findViewById(R.id.saver);
                 EditText width=(EditText)mView.findViewById(R.id.width);
                 EditText thick=(EditText)mView.findViewById(R.id.thickness);
+                Handler hand=new Handler();
                 saver.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -122,27 +125,15 @@ public class MainActivity extends Activity {
 
                         // close the output stream after use
                         imageOutStream[0].close();
-
-                        CkScp scp = new CkScp();
-                        boolean success = scp.UseSsh(Paint.ssh);
-                        if (success != true) {
-                            Toast.makeText(getApplicationContext(),"SCP failed",Toast.LENGTH_LONG).show();
-                            Log.i(TAG, scp.lastErrorText());
-                            return;
-                        }
-
-                        String remotePath = "~/Desktop/3Dprinter/"+name;
+                        String remotePath = "/home/pi/Desktop/3Dprinter/"+name;
                         String localPath = "/storage/emulated/0/"+Environment.DIRECTORY_PICTURES+"/"+name;
-                        success = scp.UploadFile(localPath,remotePath);
-                        if (success != true) {
-                            Log.i(TAG, scp.lastErrorText());
-                            return;
-                        }
+                        runThread rune=new runThread(localPath,remotePath,hand);
+                        new Thread(rune).start();
 
-                        Log.i(TAG, "SCP upload file success.");
-                        Toast.makeText(getApplicationContext(),"File loaded to the printer successfully",Toast.LENGTH_LONG).show();
+
                         // Disconnect
                     } catch (Exception e) {
+                        Toast.makeText(getApplicationContext(),"SCP problemz",Toast.LENGTH_LONG).show();
                         e.printStackTrace();
                     }
 
@@ -199,11 +190,36 @@ public class MainActivity extends Activity {
             }
         });
     }
-    static {
-        System.loadLibrary("chilkat");
+    public class runThread extends Thread
+    {
+        String localPath,remotePath;
+        Handler hand;
+        boolean success= false;
+        public runThread(String l, String r, Handler h)
+        {
+            localPath=l;
+            remotePath=r;
+            hand=h;
+        }
 
-        // Note: If the incorrect library name is passed to System.loadLibrary,
-        // then you will see the following error message at application startup:
-        //"The application <your-application-name> has stopped unexpectedly. Please try again."
+
+        public void run()
+        {
+            super.run();
+            try {
+                Paint.channelSftp.put(localPath, remotePath);
+                success=true;
+            } catch (SftpException e) {
+                e.printStackTrace();
+            }
+            hand.post(()->{
+                if (success)
+                    Toast.makeText(getApplicationContext(),"File loaded to the printer successfully",Toast.LENGTH_LONG).show();
+                else
+                    Toast.makeText(getApplicationContext(),"SFTP problem",Toast.LENGTH_LONG).show();
+            });
+
+        }
     }
+
 }

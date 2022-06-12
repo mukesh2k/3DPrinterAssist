@@ -1,5 +1,6 @@
 package com.example.myapplication;
 
+import static com.jcraft.jsch.JSch.setConfig;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
@@ -17,17 +18,20 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.chilkatsoft.CkSsh;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Paint extends Activity {
-    static String ipaddress="192.168.100.100";
-    static CkSsh ssh;
-    static final String TAG = "Chilkat";    Handler h;
+    Handler h;
     TextView connect;
     ProgressBar pc;
+    static ChannelSftp channelSftp;
     static Boolean good=false;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -88,27 +92,41 @@ public class Paint extends Activity {
         @Override
         public void run() {
             super.run();
-            String cur="192.168.4.1";
+
+            JSch jsch = new JSch();
+            jsch.setConfig("StrictHostKeyChecking", "no");
+            String username="pi",remoteHost="192.168.4.1",password="admin";
+            Session jschSession = null;
+            boolean success=false;
+
+
             h.post(()->{
                 pc.setVisibility(View.VISIBLE);
                 connect.setText("Processing... Wait...");
                 connect.setTextColor(Color.rgb(255,255,0));
             });
+            int c=3;
+            while(c>0)
+            {
+                try {
+                    jschSession = jsch.getSession(username, remoteHost);
+                    jschSession.setPassword(password);
+                    jschSession.setTimeout(3000);
+                    jschSession.connect();
+                    channelSftp =(ChannelSftp) jschSession.openChannel("sftp");
+                    channelSftp.connect();
+                    success=true;
+                    break;
+                } catch (JSchException e){
+                    e.printStackTrace();
+                }
+                c--;
+            }
 
-            ipaddress=cur;
-            ssh = new CkSsh();
 
-            // Connect to an SSH server:
-            String hostname;
-            int port;
 
-            // Hostname may be an IP address or hostname:
-            hostname =ipaddress;
-            port = 22;
 
-            boolean success = ssh.Connect(hostname,port);
             if (success != true) {
-                Log.i(TAG, ssh.lastErrorText());
                 h.post(()->{
                     pc.setVisibility(View.INVISIBLE);
                     Toast.makeText(getApplicationContext(),"Wifi is not connected with the actual printer wifi.",Toast.LENGTH_LONG).show();
@@ -118,13 +136,8 @@ public class Paint extends Activity {
                 return;
             }
 
-            // Wait a max of 5 seconds when reading responses..
-            ssh.put_IdleTimeoutMs(1000);
-
-            // Authenticate using login/password:
-            success = ssh.AuthenticatePw("pi","admin");
             if (!success) {
-                Log.i(TAG, ssh.lastErrorText());
+
                 h.post(()->{
                     pc.setVisibility(View.INVISIBLE);
                     Toast.makeText(getApplicationContext(),"LoginID or password is wrong, contact developer",Toast.LENGTH_LONG).show();
@@ -143,11 +156,5 @@ public class Paint extends Activity {
             });
         }
     }
-    static {
-        System.loadLibrary("chilkat");
 
-        // Note: If the incorrect library name is passed to System.loadLibrary,
-        // then you will see the following error message at application startup:
-        //"The application <your-application-name> has stopped unexpectedly. Please try again."
-    }
 }

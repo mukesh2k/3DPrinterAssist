@@ -1,6 +1,11 @@
 package com.example.myapplication;
-import com.chilkatsoft.chilkat;
-import com.chilkatsoft.*;
+
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
@@ -30,6 +35,7 @@ public class Help extends Activity {
                 "2)Click print and then it will take a navigator to save the file. DO NOT CHANGE THE FILE LOCATION OR NAME OF THE FILE\n" +
                 "3)Click print, printing starts when the file sent successfully";
         texts.setText(data);
+
 
     }
 
